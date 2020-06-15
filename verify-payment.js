@@ -62,7 +62,7 @@ exports.handler = async (event, context, callback) => {
       client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
       private_key: GOOGLE_PRIVATE_KEY,
     });
-    
+
     await doc.loadInfo();
 
     const sheet = doc.sheetsByIndex[0];
@@ -123,7 +123,9 @@ exports.handler = async (event, context, callback) => {
       net_amount,
       mop_text,
       description,
+      paid_at,
       billing,
+      remarks,
     } = payment_details;
 
     const { name, email, phone, address } = billing;
@@ -132,16 +134,26 @@ exports.handler = async (event, context, callback) => {
 
     let fullAddress = `${line1} ${line2},${city} ${state} ${postal_code}, ${country}`;
 
+    let newDate = new Date(paid_at * 1000);
+    let d = newDate.getDate();
+    let m = newDate.getMonth();
+    let y = newDate.getFullYear();
+
+    //! Useful for Refund
+    let date_paid = `${y}-${m}-${d}`;
+
     rows[rowIndex].paid = "yes";
+    rows[rowIndex].date_paid = date_paid;
     rows[rowIndex].payment_id = id;
     rows[rowIndex].net_amount = net_amount / 100;
     rows[rowIndex].currency = currency;
     rows[rowIndex].mop = mop_text;
     rows[rowIndex].order_details = description;
-    rows[rowIndex].name = name;
-    rows[rowIndex].email = email;
-    rows[rowIndex].phone = phone;
+    rows[rowIndex].payer_name = name;
+    rows[rowIndex].payer_email = email;
+    rows[rowIndex].payer_phone = phone;
     rows[rowIndex].billing_address = fullAddress;
+    row[rowIndex].remarks = remarks;
 
     await rows[rowIndex].save();
 
