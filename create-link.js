@@ -1,40 +1,60 @@
+require("dotenv").config();
 const axios = require("axios");
-const URL = "https://gateway.paymongo.com/transactions";
+const CREATE_URI = "https://gateway.paymongo.com/transactions";
+const AUTH_URI = "https://gateway.paymongo.com/auth";
+const { PAYMONGO_EMAIL, PAYMONGO_PASS, PAYMONGO_LIVEMODE } = process.env;
 
-exports.handler = function (event, context, callback) {
-  const send = (body) => {
-    callback(null, {
-      statusCode: 200,
-      body: JSON.stringify(body),
-    });
-  };
-
+exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
     let error = {
       statusCode: 405,
       body: "Method Not Allowed",
       headers: { Allow: "POST" },
     };
-    send(error);
+    return error;
   }
 
-  // parse data , add default value for livemode and remarks
-  const { amount, description, remarks = "", livemode = false } = JSON.parse(
-    event.body
-  );
+  let credentials = {
+    data: {
+      attributes: {
+        email: PAYMONGO_EMAIL,
+        password: PAYMONGO_PASS,
+      },
+    },
+  };
 
-  // validate data
+  const getApiToken = async () => {
+    try {
+      const res = await axios({
+        method: "post",
+        url: AUTH_URI,
+        data: credentials,
+      });
+      const token = await res.data.data.id;
+      return token;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  };
+
+  const {
+    amount,
+    description,
+    remarks = "",
+  } = JSON.parse(event.body);
+
   if (!amount || !description) {
     let error = {
       statusCode: 422,
       body: "amount, and description are required.",
     };
-    send(error);
+    return error;
   }
-
-  // parse api token
-  const token = event.headers.authorization;
-
+  let livemode = false
+  if (PAYMONGO_LIVEMODE === true || PAYMONGO_LIVEMODE == "true") {
+    livemode = true;
+  }
   let payload = {
     data: {
       attributes: {
@@ -45,21 +65,27 @@ exports.handler = function (event, context, callback) {
       },
     },
   };
+  const createLink = async (token) => {
+    axios.defaults.headers.common["Authorization"] = "Bearer " + token;
 
-  // perform api call
-  const createLink = () => {
-    // attach bearer token
-    axios.defaults.headers.common["Authorization"] = token;
-    axios({
-      method: "post",
-      url: URL,
-      data: payload,
-    })
-      .then((res) => send(res.data))
-      .catch((err) => send(err));
+    try {
+      const res = await axios({
+        method: "post",
+        url: CREATE_URI,
+        data: payload,
+      });
+      const data = await res.data;
+      return data;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
   };
-  if (event.httpMethod == "POST") {
-    createLink();
-    //TODO emailLink()
-  }
+  const token = await getApiToken();
+  const data = await createLink(token);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(data),
+  };
 };
