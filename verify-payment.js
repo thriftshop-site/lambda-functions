@@ -100,13 +100,14 @@ exports.handler = async (event, context, callback) => {
 
     let attributes = payment.data.data.attributes;
 
-    const { status } = attributes;
+    const { status, url } = attributes;
 
     if (status == "unpaid") {
       return {
         statusCode: 200,
         body: JSON.stringify({
-          message: "UNPAID!",
+          message: "Go to This Link and Settle Payment: " + url,
+          url,
         }),
       };
     }
@@ -121,6 +122,7 @@ exports.handler = async (event, context, callback) => {
       id,
       currency,
       net_amount,
+      fee,
       mop_text,
       description,
       paid_at,
@@ -154,9 +156,10 @@ exports.handler = async (event, context, callback) => {
     rows[rowIndex].paid = "yes";
     rows[rowIndex].date_paid = date_paid;
     rows[rowIndex].payment_id = id;
-    rows[rowIndex].net_amount = net_amount / 100;
     rows[rowIndex].payout_date = payout_date;
     rows[rowIndex].currency = currency;
+    rows[rowIndex].net_amount = parseFloat(parseInt(net_amount) / 100);
+    rows[rowIndex].fee = parseFloat(parseInt(fee) / 100);
     rows[rowIndex].mop = mop_text;
     rows[rowIndex].order_details = description;
     rows[rowIndex].payer_name = name;

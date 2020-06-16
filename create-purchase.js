@@ -20,7 +20,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      body: "Method Not Allowed",
+      body: JSON.stringify({ error: "Method Not Allowed!" }),
       headers: { Allow: "POST" },
     };
   }
@@ -48,12 +48,14 @@ exports.handler = async (event) => {
 
       await sheet.setHeaderRow([
         "reference_no",
+        "pm_link",
         "payment_id",
         "paid",
         "date_paid",
         "mop",
         "currency",
         "net_amount",
+        "fee",
         "payout_date",
         "sent",
         "courier",
@@ -73,23 +75,77 @@ exports.handler = async (event) => {
     }
 
     const {
+      pm_link,
       reference_no = null,
-      address = null,
-      notes = null,
       receiver_name = null,
       receiver_phone = null,
+      address = null,
+      notes = null,
     } = JSON.parse(event.body);
 
-    if (!reference_no && !address && !receiver_name && !receiver_phone) {
+    let validationError = [];
+
+    if (!pm_link) {
       let error = {
+        field: "pm_link",
+        message: "No Paymongo Link Submitted, *pm_link* is required",
+      };
+      validationError.push(error);
+    }
+
+    if (!reference_no) {
+      let error = {
+        field: "reference_no",
+        message: "No Reference No Submitted, *reference_no* is required",
+      };
+      validationError.push(error);
+    }
+
+    if (!address) {
+      let error = {
+        field: "address",
+        message: "No Address No Submitted, *address* is required",
+      };
+      validationError.push(error);
+    }
+
+    if (!receiver_name) {
+      let error = {
+        field: "receiver_name",
+        message: "No Receiver Name Submitted, *receiver_name* is required",
+      };
+      validationError.push(error);
+    }
+
+    if (!receiver_phone) {
+      let error = {
+        field: "receiver_phone",
+        message: "No Receiver Phone Submitted, *receiver_phone* is required",
+      };
+      validationError.push(error);
+    }
+
+    if (validationError.length > 0) {
+      return {
         statusCode: 422,
-        body:
-          "Reference No, and Delivery Address, Receiver Name and Phone  are Required!",
+        body: JSON.stringify({ errors: validationError }),
+      };
+    }
+
+    const rows = await sheet.getRows();
+
+    const rowIndex = rows.findIndex((x) => x.reference_no == reference_no);
+
+    if (rowIndex > -1) {
+      let error = {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Purchase Record Already Exist!" }),
       };
       return error;
     }
 
     const newRow = await sheet.addRow({
+      pm_link,
       reference_no,
       receiver_name,
       receiver_phone,
