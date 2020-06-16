@@ -114,7 +114,7 @@ exports.handler = async (event, context, callback) => {
 
     if (status == "unpaid") {
       return {
-        statusCode: 200,
+        statusCode: 400,
         body: JSON.stringify({
           message: "Go to This Link and Settle Payment: " + url,
           url,
