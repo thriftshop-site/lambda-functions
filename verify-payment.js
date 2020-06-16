@@ -29,7 +29,7 @@ exports.handler = async (event, context, callback) => {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      body: "Method Not Allowed",
+      body: JSON.stringify({ error: "Method Not Allowed!" }),
       headers: { Allow: "POST" },
     };
   }
@@ -69,13 +69,23 @@ exports.handler = async (event, context, callback) => {
 
     const { reference_no = null } = JSON.parse(event.body);
 
+    let validationError = [];
+
     if (!reference_no) {
       let error = {
-        statusCode: 422,
-        body: "Reference is Required!",
+        field: "reference_no",
+        message: "No Reference No. Submitted, *reference_no* is required",
       };
-      return error;
+      validationError.push(error);
     }
+
+    if (validationError.length > 0) {
+      return {
+        statusCode: 422,
+        body: JSON.stringify({ errors: validationError }),
+      };
+    }
+
     const rows = await sheet.getRows();
 
     sheet.loadHeaderRow();
@@ -154,6 +164,7 @@ exports.handler = async (event, context, callback) => {
     let payout_date = `${y1}-${m1}-${d1}`;
 
     rows[rowIndex].paid = "yes";
+    rows[rowIndex].pm_link = url;
     rows[rowIndex].date_paid = date_paid;
     rows[rowIndex].payment_id = id;
     rows[rowIndex].payout_date = payout_date;

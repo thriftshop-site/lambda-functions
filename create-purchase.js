@@ -75,7 +75,6 @@ exports.handler = async (event) => {
     }
 
     const {
-      pm_link,
       reference_no = null,
       receiver_name = null,
       receiver_phone = null,
@@ -84,14 +83,6 @@ exports.handler = async (event) => {
     } = JSON.parse(event.body);
 
     let validationError = [];
-
-    if (!pm_link) {
-      let error = {
-        field: "pm_link",
-        message: "No Paymongo Link Submitted, *pm_link* is required",
-      };
-      validationError.push(error);
-    }
 
     if (!reference_no) {
       let error = {
@@ -145,7 +136,6 @@ exports.handler = async (event) => {
     }
 
     const newRow = await sheet.addRow({
-      pm_link,
       reference_no,
       receiver_name,
       receiver_phone,
