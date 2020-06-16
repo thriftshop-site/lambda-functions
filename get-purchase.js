@@ -53,7 +53,7 @@ exports.handler = async (event) => {
 
     if (rowIndex == -1) {
       let error = {
-        statusCode: 400,
+        statusCode: 404,
         body: "Reference Number Not Found!",
       };
       return error;
