@@ -46,6 +46,10 @@ exports.handler = async (event) => {
     } catch (error) {
       console.log("Setting up Spreadsheet Header For The First Time");
 
+      await sheet.updateProperties({ title: "Purchase Records" });
+
+      await sheet.resize({ rowCount: 1000, columnCount: 27 });
+
       await sheet.setHeaderRow([
         "reference_no",
         "pm_link",
@@ -57,6 +61,8 @@ exports.handler = async (event) => {
         "net_amount",
         "fee",
         "payout_date",
+        "referral_code",
+        "referral_fee",
         "sent",
         "courier",
         "tracking_no",
@@ -77,6 +83,7 @@ exports.handler = async (event) => {
 
     const {
       reference_no = null,
+      referral = null,
       intangible = false,
       receiver_name = null,
       receiver_phone = null,
@@ -142,6 +149,7 @@ exports.handler = async (event) => {
     if (!intangible) {
       newRow = await sheet.addRow({
         reference_no,
+        referral_code: referral,
         receiver_name,
         receiver_phone,
         delivery_address: address,
@@ -151,6 +159,7 @@ exports.handler = async (event) => {
     } else {
       newRow = await sheet.addRow({
         reference_no,
+        referral_code: referral,
         intangible: "yes",
         notes,
       });
