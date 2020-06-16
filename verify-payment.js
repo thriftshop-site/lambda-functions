@@ -198,7 +198,10 @@ exports.handler = async (event, context, callback) => {
               break;
           }
         }
+        referrals_rows[ref_index].commission = parseFloat(referrals_rows[ref_index].commission) + parseFloat(rows[rowIndex].referral_fee);
+        await referrals_rows[ref_index].save();
       }
+      
     }
 
     await rows[rowIndex].save();

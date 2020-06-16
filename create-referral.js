@@ -45,6 +45,7 @@ exports.handler = async (event) => {
           "type", // type can be fix or percentage
           "amount",
           "active",
+          "commission",
         ],
       });
       sheet = doc.sheetsByIndex[1];
@@ -63,6 +64,7 @@ exports.handler = async (event) => {
         "type", // type can be fix or percentage
         "amount",
         "active",
+        "commission",
       ]);
     }
     const {
@@ -138,6 +140,7 @@ exports.handler = async (event) => {
       active,
       email,
       amount,
+      commission: 0,
     });
 
     let message = "Please Wait For Us To Approved Your Application";
