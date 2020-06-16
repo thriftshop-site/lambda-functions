@@ -51,7 +51,7 @@ exports.handler = async (event) => {
 
     if (rowIndex == -1) {
       let error = {
-        statusCode: 400,
+        statusCode: 404,
         body: "Reference Number Not Found!",
       };
       return error;
@@ -61,7 +61,7 @@ exports.handler = async (event) => {
 
     if (!sent || sent && sent.toLowerCase() != "yes") {
       return {
-        statusCode: 404,
+        statusCode: 400,
         body: JSON.stringify({
           message: "Order Not Yet Delivered",
         }),
