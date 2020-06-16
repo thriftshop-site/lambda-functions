@@ -53,6 +53,7 @@ exports.handler = async (event) => {
         "date_paid",
         "mop",
         "net_amount",
+        "payout_date",
         "currency",
         "sent",
         "courier",

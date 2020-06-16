@@ -124,6 +124,7 @@ exports.handler = async (event, context, callback) => {
       mop_text,
       description,
       paid_at,
+      available_at,
       billing,
       remarks,
     } = payment_details;
@@ -140,13 +141,21 @@ exports.handler = async (event, context, callback) => {
     let m = newDate.getMonth();
     let y = newDate.getFullYear();
 
+    let newDate1 = new Date(available_at * 1000);
+
+    let d1 = newDate1.getDate();
+    let m1 = newDate1.getMonth();
+    let y1 = newDate1.getFullYear();
+
     //! Useful for Refund
     let date_paid = `${y}-${m}-${d}`;
+    let payout_date = `${y1}-${m1}-${d1}`;
 
     rows[rowIndex].paid = "yes";
     rows[rowIndex].date_paid = date_paid;
     rows[rowIndex].payment_id = id;
     rows[rowIndex].net_amount = net_amount / 100;
+    rows[rowIndex].payout_date = payout_date;
     rows[rowIndex].currency = currency;
     rows[rowIndex].mop = mop_text;
     rows[rowIndex].order_details = description;
