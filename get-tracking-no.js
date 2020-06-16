@@ -1,24 +1,21 @@
 if (!process.env.NETLIFY) {
   require("dotenv").config();
 }
-if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL)
-  throw new Error("no GOOGLE_SERVICE_ACCOUNT_EMAIL env var set");
-if (!process.env.GOOGLE_PRIVATE_KEY)
-  throw new Error("no GOOGLE_PRIVATE_KEY env var set");
-if (!process.env.GOOGLE_SPREADSHEET_ID_FROM_URL)
-  throw new Error("no GOOGLE_SPREADSHEET_ID_FROM_URL env var set");
-
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 
+const {
+  GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  GOOGLE_PRIVATE_KEY,
+  GOOGLE_SPREADSHEET_ID_FROM_URL,
+} = process.env;
 
+if (!GOOGLE_SERVICE_ACCOUNT_EMAIL)
+  throw new Error("No GOOGLE_SERVICE_ACCOUNT_EMAIL env var set");
+if (!GOOGLE_PRIVATE_KEY) throw new Error("No GOOGLE_PRIVATE_KEY env var set");
+if (!GOOGLE_SPREADSHEET_ID_FROM_URL)
+  throw new Error("No GOOGLE_SPREADSHEET_ID_FROM_URL env var set");
 
-exports.handler = async (event, context, callback) => {
-    const send = (body) => {
-    callback(null, {
-      statusCode: 200,
-      body: JSON.stringify(body),
-    });
-  };
+exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -27,52 +24,60 @@ exports.handler = async (event, context, callback) => {
     };
   }
   try {
-    const doc = new GoogleSpreadsheet(
-      process.env.GOOGLE_SPREADSHEET_ID_FROM_URL
-    );
+    const doc = new GoogleSpreadsheet(GOOGLE_SPREADSHEET_ID_FROM_URL);
+
     await doc.useServiceAccountAuth({
-      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY,
+      client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: GOOGLE_PRIVATE_KEY,
     });
+
     await doc.loadInfo();
 
     const sheet = doc.sheetsByIndex[0];
+
     const { reference_no = null } = JSON.parse(event.body);
 
     if (!reference_no) {
       let error = {
         statusCode: 422,
-        body: "Reference is Required!",
+        body: "Reference No is Required!",
       };
-      return {
-        statusCode: 500,
-        body: JSON.stringify(error),
-      };
+      return error;
     }
+
     const rows = await sheet.getRows();
+
     const rowIndex = rows.findIndex((x) => x.reference_no == reference_no);
 
     if (rowIndex == -1) {
       let error = {
-        statusCode: 404,
+        statusCode: 400,
         body: "Reference Number Not Found!",
       };
+      return error;
+    }
+
+    const { tracking_no = "", courier = "", sent = null } = rows[rowIndex];
+
+    if (!sent || sent.toLowerCase() != "no") {
       return {
-        statusCode: 404,
-        body: JSON.stringify(error),
+        statusCode: 200,
+        body: JSON.stringify({
+          message: "Order Not Yet Delivered",
+        }),
       };
     }
-    const {tracking_no,courier,sent} = rows[rowIndex];
-    
+
     return {
       statusCode: 200,
       body: JSON.stringify({
         tracking_no,
         courier,
-        sent
+        sent,
       }),
     };
   } catch (e) {
+    console.log(e.toString());
     return {
       statusCode: 500,
       body: e.toString(),
