@@ -59,9 +59,9 @@ exports.handler = async (event) => {
 
     const { tracking_no = "", courier = "", sent = null } = rows[rowIndex];
 
-    if (!sent || sent.toLowerCase() != "no") {
+    if (!sent || sent && sent.toLowerCase() != "yes") {
       return {
-        statusCode: 200,
+        statusCode: 404,
         body: JSON.stringify({
           message: "Order Not Yet Delivered",
         }),
