@@ -66,15 +66,20 @@ exports.handler = async (event) => {
       return error;
     }
 
-    const { tracking_no = "", courier = "", sent = null, intangible=false } = rows[rowIndex];
+    const {
+      tracking_no = "",
+      courier = "",
+      sent = null,
+      intangible = "no",
+    } = rows[rowIndex];
 
-    if(intangible || intangible.toLowerCase == "yes"){
-        return {
-          statusCode: 400,
-          body: JSON.stringify({
-            message: "Order is Not Considered as *Deliverable*",
-          }),
-        };
+    if (intangible == "yes" || intangible.toLowerCase == "yes") {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: "Order is Not Considered as *Deliverable*",
+        }),
+      };
     }
 
     if (!sent || sent && sent.toLowerCase() != "yes") {
