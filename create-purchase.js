@@ -61,6 +61,7 @@ exports.handler = async (event) => {
         "courier",
         "tracking_no",
         "received",
+        "intangible",
         "order_details",
         "receiver_name",
         "receiver_phone",
@@ -76,6 +77,7 @@ exports.handler = async (event) => {
 
     const {
       reference_no = null,
+      intangible = false,
       receiver_name = null,
       receiver_phone = null,
       address = null,
@@ -92,28 +94,30 @@ exports.handler = async (event) => {
       validationError.push(error);
     }
 
-    if (!address) {
-      let error = {
-        field: "address",
-        message: "No Address No Submitted, *address* is required",
-      };
-      validationError.push(error);
-    }
+    if (!intangible) {
+      if (!address) {
+        let error = {
+          field: "address",
+          message: "No Address No Submitted, *address* is required",
+        };
+        validationError.push(error);
+      }
 
-    if (!receiver_name) {
-      let error = {
-        field: "receiver_name",
-        message: "No Receiver Name Submitted, *receiver_name* is required",
-      };
-      validationError.push(error);
-    }
+      if (!receiver_name) {
+        let error = {
+          field: "receiver_name",
+          message: "No Receiver Name Submitted, *receiver_name* is required",
+        };
+        validationError.push(error);
+      }
 
-    if (!receiver_phone) {
-      let error = {
-        field: "receiver_phone",
-        message: "No Receiver Phone Submitted, *receiver_phone* is required",
-      };
-      validationError.push(error);
+      if (!receiver_phone) {
+        let error = {
+          field: "receiver_phone",
+          message: "No Receiver Phone Submitted, *receiver_phone* is required",
+        };
+        validationError.push(error);
+      }
     }
 
     if (validationError.length > 0) {
@@ -134,14 +138,23 @@ exports.handler = async (event) => {
       };
       return error;
     }
-
-    const newRow = await sheet.addRow({
-      reference_no,
-      receiver_name,
-      receiver_phone,
-      delivery_address: address,
-      notes,
-    });
+    var newRow;
+    if (!intangible) {
+      newRow = await sheet.addRow({
+        reference_no,
+        receiver_name,
+        receiver_phone,
+        delivery_address: address,
+        intangible: "no",
+        notes,
+      });
+    } else {
+      newRow = await sheet.addRow({
+        reference_no,
+        intangible: "yes",
+        notes,
+      });
+    }
 
     return {
       statusCode: 201,

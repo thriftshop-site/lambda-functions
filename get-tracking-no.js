@@ -19,7 +19,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      body: "Method Not Allowed",
+      body: JSON.stringify({ error: "Method Not Allowed!" }),
       headers: { Allow: "POST" },
     };
   }
@@ -37,12 +37,21 @@ exports.handler = async (event) => {
 
     const { reference_no = null } = JSON.parse(event.body);
 
+    let validationError = [];
+
     if (!reference_no) {
       let error = {
-        statusCode: 422,
-        body: "Reference No is Required!",
+        field: "reference_no",
+        message: "No Reference No. Submitted, *reference_no* is required",
       };
-      return error;
+      validationError.push(error);
+    }
+
+    if (validationError.length > 0) {
+      return {
+        statusCode: 422,
+        body: JSON.stringify({ errors: validationError }),
+      };
     }
 
     const rows = await sheet.getRows();
@@ -52,12 +61,21 @@ exports.handler = async (event) => {
     if (rowIndex == -1) {
       let error = {
         statusCode: 404,
-        body: "Reference Number Not Found!",
+        body: JSON.stringify({ error: "Reference Number Not Found!" }),
       };
       return error;
     }
 
-    const { tracking_no = "", courier = "", sent = null } = rows[rowIndex];
+    const { tracking_no = "", courier = "", sent = null, intangible=false } = rows[rowIndex];
+
+    if(intangible || intangible.toLowerCase == "yes"){
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            message: "Order is Not Considered as *Deliverable*",
+          }),
+        };
+    }
 
     if (!sent || sent && sent.toLowerCase() != "yes") {
       return {

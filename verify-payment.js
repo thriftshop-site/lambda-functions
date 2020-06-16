@@ -94,8 +94,8 @@ exports.handler = async (event, context, callback) => {
 
     if (rowIndex == -1) {
       let error = {
-        statusCode: 400,
-        body: "Reference Number Not Found!",
+        statusCode: 404,
+        body: JSON.stringify({ error: "Reference Number Not Found!" }),
       };
       return error;
     }
