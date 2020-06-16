@@ -103,8 +103,11 @@ exports.handler = async (event) => {
         rowNumber: newRow._rowNumber - 1,
       }),
     };
-  } catch (err) {
-    console.log(err);
-    return err;
+  } catch (e) {
+    console.log(e.toString());
+    return {
+      statusCode: 500,
+      body: e.toString(),
+    };
   }
 };

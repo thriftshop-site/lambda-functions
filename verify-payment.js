@@ -171,6 +171,7 @@ exports.handler = async (event, context, callback) => {
       body: JSON.stringify(rowData),
     };
   } catch (e) {
+    console.log(e.toString());
     return {
       statusCode: 500,
       body: e.toString(),
