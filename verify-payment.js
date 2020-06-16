@@ -67,8 +67,6 @@ exports.handler = async (event, context, callback) => {
 
     const sheet = doc.sheetsByIndex[0];
 
-    const referrals = doc.sheetsByIndex[1];
-
     const { reference_no = null } = JSON.parse(event.body);
 
     let validationError = [];
@@ -100,27 +98,6 @@ exports.handler = async (event, context, callback) => {
         body: JSON.stringify({ error: "Reference Number Not Found!" }),
       };
       return error;
-    }
-
-    const referrals_rows = await referrals.getRows();
-    var referral = null;
-    var referral_fee = 0;
-    var ref_percent = 1;
-
-    if (referrals.rowCount > 0) {
-      const ref_index = referrals_rows.findIndex(
-        (x) => x.referral_code == rows[rowIndex].referral_code
-      );
-      if (ref_index != -1) {
-        referral = referrals_rows[ref_index].referral_code;
-
-        if (referrals_rows[ref_index].type == "fixed") {
-          referral_fee = referrals_rows[ref_index].amount;
-        }
-        if (referrals_rows[ref_index].type == "percent") {
-          ref_percent = parseInt(referrals_rows[ref_index].amount) / 100;
-        }
-      }
     }
 
     let endpoint = `${URL}/${reference_no}?livemode=${PAYMONGO_LIVEMODE}`;
@@ -201,13 +178,26 @@ exports.handler = async (event, context, callback) => {
     rows[rowIndex].payer_phone = phone;
     rows[rowIndex].billing_address = fullAddress;
     rows[rowIndex].remarks = remarks;
-    if (referral) {
-      if (referral_fee > 0) {
-        rows[rowIndex].referral_fee = referral_fee;
-      }
-      if (ref_percent < 1) {
-        rows[rowIndex].referral_fee =
-          parseFloat(parseInt(net_amount) / 100) * ref_percent;
+
+    //! Setting Up Referral Commission
+    const username = rows[rowIndex].referral_code ? rows[rowIndex].referral_code : null;
+
+    if (username) {
+      const referrals = doc.sheetsByIndex[1];
+      const referrals_rows = await referrals.getRows();
+
+      if (referrals.rowCount > 0) {
+        const ref_index = referrals_rows.findIndex((x) => x.referral_code == username);
+        if (ref_index != -1) {
+          switch (referrals_rows[ref_index].type) {
+            case "fixed":
+              rows[rowIndex].referral_fee = referrals_rows[ref_index].amount;
+              break;
+            default:
+              rows[rowIndex].referral_fee = parseFloat(parseInt(net_amount) / 100) * (parseFloat(referrals_rows[ref_index].amount) / 100);
+              break;
+          }
+        }
       }
     }
 
