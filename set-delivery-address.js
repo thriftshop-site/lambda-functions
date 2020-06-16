@@ -79,7 +79,7 @@ exports.handler = async (event) => {
       receiver_phone = null,
     } = JSON.parse(event.body);
 
-    if (!reference_no && !address && !receiver_name && !receiver_name) {
+    if (!reference_no && !address && !receiver_name && !receiver_phone) {
       let error = {
         statusCode: 422,
         body:
