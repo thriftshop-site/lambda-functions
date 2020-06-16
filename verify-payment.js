@@ -135,6 +135,7 @@ exports.handler = async (event, context, callback) => {
     let fullAddress = `${line1} ${line2},${city} ${state} ${postal_code}, ${country}`;
 
     let newDate = new Date(paid_at * 1000);
+
     let d = newDate.getDate();
     let m = newDate.getMonth();
     let y = newDate.getFullYear();
@@ -153,7 +154,7 @@ exports.handler = async (event, context, callback) => {
     rows[rowIndex].payer_email = email;
     rows[rowIndex].payer_phone = phone;
     rows[rowIndex].billing_address = fullAddress;
-    row[rowIndex].remarks = remarks;
+    rows[rowIndex].remarks = remarks;
 
     await rows[rowIndex].save();
 
