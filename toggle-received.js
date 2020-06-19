@@ -10,10 +10,8 @@ if (!process.env.GOOGLE_SPREADSHEET_ID_FROM_URL)
 
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 
-
-
 exports.handler = async (event, context, callback) => {
-    const send = (body) => {
+  const send = (body) => {
     callback(null, {
       statusCode: 200,
       body: JSON.stringify(body),
@@ -62,14 +60,25 @@ exports.handler = async (event, context, callback) => {
         body: JSON.stringify(error),
       };
     }
-    rows[rowIndex].received = "yes";
+    if (
+      rows[rowIndex].received == "no" ||
+      rows[rowIndex].received == false
+    ) {
+      rows[rowIndex].received = "yes";
+    } else {
+      rows[rowIndex].received = "no";
+    }
+    var isReceived = "Order Has Been Mark As Not Yet Received"
+    if(rows[rowIndex].received == "yes"){
+        isReceived = "Order Has Been Mark As Received";
+    }
     
     await rows[rowIndex].save();
-    
+
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: 'Product Purchase Mark As Received'
+        message: `${isReceived}`,
       }),
     };
   } catch (e) {
