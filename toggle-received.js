@@ -10,13 +10,8 @@ if (!process.env.GOOGLE_SPREADSHEET_ID_FROM_URL)
 
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 
-exports.handler = async (event, context, callback) => {
-  const send = (body) => {
-    callback(null, {
-      statusCode: 200,
-      body: JSON.stringify(body),
-    });
-  };
+exports.handler = async (event) => {
+  
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -40,7 +35,7 @@ exports.handler = async (event, context, callback) => {
     if (!reference_no) {
       let error = {
         statusCode: 422,
-        body: "Reference is Required!",
+        body: "Reference No is Required!",
       };
       return {
         statusCode: 500,
